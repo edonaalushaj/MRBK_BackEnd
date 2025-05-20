@@ -1,0 +1,26 @@
+package com.example.backend.dto;
+
+import lombok.Data;
+import java.time.LocalDate;
+import java.time.LocalTime;
+
+
+@Data
+public class MovieDetailsDTO {
+    private String title;
+    private String description;
+    private String imageUrl;
+    private String showDate;
+    private String showTime;
+    private String cinemaName;
+    private String hall;
+
+    public void setShowDate(String showDate) {
+        this.showDate = showDate;
+    }
+
+    public void setShowTime(String showTime) {
+        this.showTime = showTime;
+    }
+
+}
