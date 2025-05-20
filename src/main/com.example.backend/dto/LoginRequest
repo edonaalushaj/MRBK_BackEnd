@@ -8,5 +8,5 @@ public class LoginRequest {
     private String name;
     private String email;
     private String password;
-    private UUID tenantId; // ✅ make sure tenantId is included
+    private UUID tenantId; 
 }
