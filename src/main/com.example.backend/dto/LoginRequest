@@ -1,0 +1,12 @@
+package com.example.backend.dto;
+
+import lombok.Data;
+import java.util.UUID;
+
+@Data
+public class LoginRequest {
+    private String name;
+    private String email;
+    private String password;
+    private UUID tenantId; // ✅ make sure tenantId is included
+}
