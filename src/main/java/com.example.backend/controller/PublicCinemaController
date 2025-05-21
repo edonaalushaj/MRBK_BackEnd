@@ -1,0 +1,22 @@
+package com.example.backend.controller;
+
+import com.example.backend.model.Cinema;
+import com.example.backend.repository.CinemaRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/public/cinemas")
+@CrossOrigin(origins = "*")
+public class PublicCinemaController {
+
+    @Autowired
+    private CinemaRepository cinemaRepository;
+
+    @GetMapping
+    public List<Cinema> getAllCinemasPublic() {
+        return cinemaRepository.findAll(); // NOT filtered by tenantId
+    }
+}
