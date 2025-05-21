@@ -12,7 +12,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/cinemas")
 @CrossOrigin(origins = "*")
-public class CinemaController {
+public class CinemaController { 
 
     @Autowired
     private CinemaService cinemaService;
