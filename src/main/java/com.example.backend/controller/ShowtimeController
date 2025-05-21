@@ -1,0 +1,68 @@
+package com.example.backend.controller;
+
+import com.example.backend.dto.ShowtimeDTO;
+import com.example.backend.model.Movie;
+import com.example.backend.model.Showtime;
+import com.example.backend.service.ShowtimeService;
+import com.example.backend.tenant.TenantContext;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/showtimes")
+@CrossOrigin(origins = "*")
+public class ShowtimeController {
+
+    @Autowired
+    private ShowtimeService showtimeService;
+
+    @GetMapping("/dates")
+    public List<LocalDate> getDatesByCinema(@RequestParam Long cinemaId) {
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        return showtimeService.getAvailableDatesByCinema(cinemaId, tenantId);
+    }
+
+    @GetMapping("/movies")
+    public List<Movie> getMoviesByCinemaAndDate(
+            @RequestParam Long cinemaId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        return showtimeService.getMoviesByCinemaAndDate(cinemaId, date, tenantId);
+    }
+
+    @GetMapping
+    public List<ShowtimeDTO> getShowtimes(
+            @RequestParam Long cinemaId,
+            @RequestParam Long movieId,
+            @RequestParam String date) {
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        LocalDate parsedDate = LocalDate.parse(date);
+        return showtimeService.getShowtimes(tenantId, cinemaId, movieId, parsedDate)
+                .stream()
+                .map(s -> new ShowtimeDTO(s.getId(), s.getShowTime().toString())
+                )
+                .toList();
+    }
+    @GetMapping("/now-showing")
+    public List<Movie> getNowShowingMovies(@RequestParam Long cinemaId) {
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        LocalDate today = LocalDate.now();
+        return showtimeService.getMoviesByCinemaAndDate(cinemaId, today, tenantId);
+    }
+
+
+    @GetMapping("/coming-soon")
+    public List<Movie> getComingSoonMovies(@RequestParam Long cinemaId) {
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        return showtimeService.getComingSoonMoviesSorted(cinemaId, tenantId);
+    }
+
+
+
+
+}
