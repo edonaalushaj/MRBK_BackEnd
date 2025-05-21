@@ -1,0 +1,23 @@
+package com.example.backend.controller;
+
+import com.example.backend.model.Food;
+import com.example.backend.service.FoodService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.UUID;
+
+@CrossOrigin(origins = "*")
+@RestController
+@RequestMapping("/api/foods")
+public class FoodController {
+
+    @Autowired
+    private FoodService foodService;
+
+    @GetMapping
+    public List<Food> getAllFoods(@RequestHeader("X-Tenant-ID") UUID tenantId) {
+        return foodService.getFoodsByTenant(tenantId);
+    }
+}
