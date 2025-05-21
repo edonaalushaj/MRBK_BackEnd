@@ -1,0 +1,48 @@
+package com.example.backend.controller;
+
+import com.example.backend.dto.ReservationRequest;
+import com.example.backend.dto.ReservationRequest.FoodItemDTO;
+import com.example.backend.model.AppUser;
+import com.example.backend.model.Reservation;
+import com.example.backend.service.ReservationService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+@CrossOrigin(origins = "*")
+@RestController
+@RequestMapping("/api/reservations")
+public class ReservationController {
+
+    private final ReservationService reservationService;
+
+    public ReservationController(ReservationService reservationService) {
+        this.reservationService = reservationService;
+    }
+
+    // ✅ POST /api/reservations — Make a reservation
+    @PostMapping
+    public Reservation reserve(@AuthenticationPrincipal AppUser user,
+                               @RequestBody ReservationRequest request) {
+        return reservationService.reserveSeats(
+                user,
+                request.getShowtimeId(),
+                request.getSeatIds(),
+                request.getFoodItems(),
+                request.getPaymentTypeId(),
+                request.getTotal()
+        );
+    }
+
+
+    // ✅ GET /api/reservations/showtimes/{showtimeId}/seats — List of unavailable seats for that showtime
+    @GetMapping("/showtimes/{showtimeId}/seats")
+    public Map<String, List<UUID>> getUnavailableSeats(@PathVariable Long showtimeId) {
+        List<UUID> seatIds = reservationService.getReservedSeatIdsForShowtime(showtimeId);
+        return Map.of("unavailableSeatIds", seatIds);
+    }
+
+}
