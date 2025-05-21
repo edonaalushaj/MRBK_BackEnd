@@ -1,0 +1,25 @@
+package com.example.backend.controller;
+
+import com.example.backend.model.Seat;
+import com.example.backend.service.SeatService;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.UUID;
+
+@CrossOrigin(origins = "*")
+@RestController
+@RequestMapping("/api/seats")
+public class SeatController {
+
+    private final SeatService seatService;
+
+    public SeatController(SeatService seatService) {
+        this.seatService = seatService;
+    }
+
+    @GetMapping
+    public List<Seat> getSeatsByTenant(@RequestHeader("X-Tenant-ID") UUID tenantId) {
+        return seatService.getSeatsByTenant(tenantId);
+    }
+}
