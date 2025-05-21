@@ -1,0 +1,119 @@
+package com.example.backend.dto;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
+public class ReservationResponse {
+    private UUID reservationId;
+    private String userEmail;
+    private UUID showtimeId;
+    private UUID paymentTypeId;
+    private Double total;
+    private LocalDateTime reservationTime;
+    private UUID tenantId;
+    private List<UUID> seatIds;
+    private List<FoodItem> foodItems;
+
+    public static class FoodItem {
+        private UUID foodId;
+        private String name;
+        private int quantity;
+
+        public UUID getFoodId() {
+            return foodId;
+        }
+
+        public void setFoodId(UUID foodId) {
+            this.foodId = foodId;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public int getQuantity() {
+            return quantity;
+        }
+
+        public void setQuantity(int quantity) {
+            this.quantity = quantity;
+        }
+    }
+
+    public UUID getReservationId() {
+        return reservationId;
+    }
+
+    public void setReservationId(UUID reservationId) {
+        this.reservationId = reservationId;
+    }
+
+    public String getUserEmail() {
+        return userEmail;
+    }
+
+    public void setUserEmail(String userEmail) {
+        this.userEmail = userEmail;
+    }
+
+    public UUID getShowtimeId() {
+        return showtimeId;
+    }
+
+    public void setShowtimeId(UUID showtimeId) {
+        this.showtimeId = showtimeId;
+    }
+
+    public UUID getPaymentTypeId() {
+        return paymentTypeId;
+    }
+
+    public void setPaymentTypeId(UUID paymentTypeId) {
+        this.paymentTypeId = paymentTypeId;
+    }
+
+    public Double getTotal() {
+        return total;
+    }
+
+    public void setTotal(Double total) {
+        this.total = total;
+    }
+
+    public LocalDateTime getReservationTime() {
+        return reservationTime;
+    }
+
+    public void setReservationTime(LocalDateTime reservationTime) {
+        this.reservationTime = reservationTime;
+    }
+
+    public UUID getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(UUID tenantId) {
+        this.tenantId = tenantId;
+    }
+
+    public List<UUID> getSeatIds() {
+        return seatIds;
+    }
+
+    public void setSeatIds(List<UUID> seatIds) {
+        this.seatIds = seatIds;
+    }
+
+    public List<FoodItem> getFoodItems() {
+        return foodItems;
+    }
+
+    public void setFoodItems(List<FoodItem> foodItems) {
+        this.foodItems = foodItems;
+    }
+}
