@@ -1,0 +1,26 @@
+package com.example.backend.dto;
+
+import com.example.backend.model.Movie;
+import java.time.LocalDate;
+
+public class ComingSoonMovieDTO {
+
+    private Movie movie;
+    private LocalDate showDate;
+
+    // This constructor is required by JPA query
+    public ComingSoonMovieDTO(Movie movie, LocalDate showDate) {
+        this.movie = movie;
+        this.showDate = showDate;
+    }
+
+    public Movie getMovie() {
+        return movie;
+    }
+
+    public LocalDate getShowDate() {
+        return showDate;
+    }
+
+   
+}
