@@ -1,0 +1,23 @@
+package com.example.backend.model;
+
+import jakarta.persistence.Embeddable;
+import java.io.Serializable;
+import java.util.UUID;
+
+@Embeddable
+public class ReservationSeatId implements Serializable {
+
+    private UUID reservationId;
+    private UUID seatId;
+
+    // constructors, equals(), hashCode()
+
+    public ReservationSeatId() {}
+
+    public ReservationSeatId(UUID reservationId, UUID seatId) {
+        this.reservationId = reservationId;
+        this.seatId = seatId;
+    }
+
+    // getters/setters, equals, hashCode
+}
