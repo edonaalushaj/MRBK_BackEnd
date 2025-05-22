@@ -1,0 +1,28 @@
+package com.example.backend.model;
+
+import jakarta.persistence.*;
+import lombok.Data;
+
+import java.util.UUID;
+
+@Entity
+@Table(name = "reservation_food")
+@Data
+public class ReservationFood {
+
+    @EmbeddedId
+    private ReservationFoodId id = new ReservationFoodId();
+
+    @ManyToOne
+    @MapsId("reservationId")
+    @JoinColumn(name = "reservation_id", nullable = false)
+    private Reservation reservation;
+
+    @ManyToOne
+    @MapsId("foodId")
+    @JoinColumn(name = "food_id", nullable = false)
+    private Food food;
+
+    @Column(name = "tenant_id", nullable = false)
+    private UUID tenantId;
+}
