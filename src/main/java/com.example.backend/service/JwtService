@@ -1,0 +1,70 @@
+package com.example.backend.service;
+
+import com.example.backend.model.AppUser;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.stereotype.Service;
+
+import java.util.Date;
+
+@Service
+public class JwtService {
+
+    private final String SECRET = "secret_key";
+
+    /**
+     * Gjeneron JWT token për një përdorues
+     */
+    public String generateToken(AppUser user) {
+        // Safely get tenant ID as string or null if tenant is null (e.g. admin)
+        String tenantId = user.getTenant() != null ? user.getTenant().getId().toString() : null;
+
+        return Jwts.builder()
+                .setSubject(user.getEmail()) // përdor email si "username"
+                .claim("tenantId", tenantId) // tenant ID për multi-tenancy (null allowed)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 86400000)) // 1 ditë
+                .signWith(SignatureAlgorithm.HS512, SECRET)
+                .compact();
+    }
+
+    /**
+     * Merr email-in e përdoruesit (subject) nga token-i
+     */
+    public String extractUsername(String token) {
+        return getClaims(token).getSubject();
+    }
+
+    /**
+     * Merr tenantId nga token-i
+     */
+    public String extractTenantId(String token) {
+        return getClaims(token).get("tenantId", String.class);
+    }
+
+    /**
+     * Kontrollon nëse token-i është valid dhe jo i skaduar
+     */
+    public boolean isTokenValid(String token, AppUser user) {
+        final String username = extractUsername(token);
+        return (username.equals(user.getEmail()) && !isTokenExpired(token));
+    }
+
+    /**
+     * Kontrollon nëse token-i ka skaduar
+     */
+    private boolean isTokenExpired(String token) {
+        return getClaims(token).getExpiration().before(new Date());
+    }
+
+    /**
+     * Parsimi bazë i claim-eve nga token-i
+     */
+    private Claims getClaims(String token) {
+        return Jwts.parser()
+                .setSigningKey(SECRET)
+                .parseClaimsJws(token)
+                .getBody();
+    }
+}
