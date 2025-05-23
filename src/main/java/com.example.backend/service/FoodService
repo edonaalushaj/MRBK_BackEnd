@@ -1,0 +1,33 @@
+package com.example.backend.service;
+
+import com.example.backend.model.Food;
+import com.example.backend.repository.FoodRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+@Service
+public class FoodService {
+
+    @Autowired
+    private FoodRepository foodRepository;
+
+    public List<Food> getFoodsByTenant(UUID tenantId) {
+        return foodRepository.findByTenantId(tenantId);
+    }
+
+    public Optional<Food> getFoodByIdAndTenant(UUID id, UUID tenantId) {
+        return foodRepository.findByIdAndTenantId(id, tenantId);
+    }
+
+    public Food saveFood(Food food) {
+        return foodRepository.save(food);
+    }
+
+    public void deleteFood(UUID id) {
+        foodRepository.deleteById(id);
+    }
+}
