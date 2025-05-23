@@ -1,0 +1,82 @@
+package com.example.backend.controller;
+
+import com.example.backend.model.Showtime;
+import com.example.backend.model.Cinema;
+import com.example.backend.model.Movie;
+import com.example.backend.service.ShowtimeService;
+import com.example.backend.service.CinemaService;
+import com.example.backend.service.MovieService;
+import com.example.backend.tenant.TenantContext;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
+import java.util.UUID;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/admin/showtimes")
+@RequiredArgsConstructor
+@PreAuthorize("hasRole('ADMIN')")
+@CrossOrigin(origins = "*")
+public class AdminShowtimeController {
+
+    private final ShowtimeService showtimeService;
+    private final CinemaService cinemaService;
+    private final MovieService movieService;
+
+    @GetMapping
+    public List<Showtime> getAllShowtimes() {
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        return showtimeService.getAllShowtimesForTenant(tenantId);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Showtime> getShowtime(@PathVariable Long id) {
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        return showtimeService.getShowtimeByIdAndTenant(id, tenantId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping
+    public ResponseEntity<Showtime> createShowtime(@RequestBody Map<String, Object> request) {
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+
+        Long cinemaId = Long.parseLong(request.get("cinemaId").toString());
+        Long movieId = Long.parseLong(request.get("movieId").toString());
+        LocalDate showDate = LocalDate.parse(request.get("showDate").toString());
+        LocalTime showTime = LocalTime.parse(request.get("showTime").toString());
+
+        Showtime showtime = showtimeService.createShowtime(cinemaId, movieId, showDate, showTime, tenantId);
+        return ResponseEntity.ok(showtime);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Showtime> updateShowtime(@PathVariable Long id, @RequestBody Map<String, Object> request) {
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+
+        Long cinemaId = Long.parseLong(request.get("cinemaId").toString());
+        Long movieId = Long.parseLong(request.get("movieId").toString());
+        LocalDate showDate = LocalDate.parse(request.get("showDate").toString());
+        LocalTime showTime = LocalTime.parse(request.get("showTime").toString());
+
+        return showtimeService.updateShowtime(id, cinemaId, movieId, showDate, showTime, tenantId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteShowtime(@PathVariable Long id) {
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+
+        if (showtimeService.deleteShowtime(id, tenantId)) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.notFound().build();
+    }
+}
