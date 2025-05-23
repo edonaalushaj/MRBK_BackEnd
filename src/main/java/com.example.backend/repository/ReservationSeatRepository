@@ -1,0 +1,17 @@
+package com.example.backend.repository;
+
+import com.example.backend.model.ReservationSeat;
+import com.example.backend.model.ReservationSeatId;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+import java.util.UUID;
+
+public interface ReservationSeatRepository extends JpaRepository<ReservationSeat, ReservationSeatId> {
+
+    // Kontroll nëse një vend është rezervuar për një showtime
+    boolean existsBySeatIdAndReservation_ShowtimeId(UUID seatId, Long showtimeId);
+
+    // Opsional: merr të gjitha vendet e rezervuara për një showtime
+    List<ReservationSeat> findByReservation_ShowtimeId(Long showtimeId);
+}
