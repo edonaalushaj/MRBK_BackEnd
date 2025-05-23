@@ -1,0 +1,22 @@
+package com.example.backend.service;
+
+import com.example.backend.model.Seat;
+import com.example.backend.repository.SeatRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.UUID;
+
+@Service
+public class SeatService {
+
+    private final SeatRepository seatRepository;
+
+    public SeatService(SeatRepository seatRepository) {
+        this.seatRepository = seatRepository;
+    }
+
+    public List<Seat> getSeatsByTenant(UUID tenantId) {
+        return seatRepository.findByTenantId(tenantId);
+    }
+}
