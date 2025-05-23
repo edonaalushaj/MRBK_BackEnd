@@ -1,0 +1,113 @@
+package com.example.backend.service;
+
+import com.example.backend.dto.ComingSoonMovieDTO;
+import com.example.backend.model.Movie;
+import com.example.backend.model.Showtime;
+import com.example.backend.model.Cinema;
+import com.example.backend.repository.ShowtimeRepository;
+import com.example.backend.repository.CinemaRepository;
+import com.example.backend.repository.MovieRepository;
+import com.example.backend.tenant.TenantContext;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+@Service
+public class ShowtimeService {
+
+    @Autowired
+    private ShowtimeRepository showtimeRepository;
+
+    @Autowired
+    private CinemaRepository cinemaRepository;
+
+    @Autowired
+    private MovieRepository movieRepository;
+
+    public List<LocalDate> getAvailableDatesByCinema(Long cinemaId, UUID tenantId) {
+        return showtimeRepository.findDatesByCinemaAndTenantId(cinemaId, tenantId);
+    }
+
+    public List<Movie> getMoviesByCinemaAndDate(Long cinemaId, LocalDate date, UUID tenantId) {
+        return showtimeRepository.findMoviesByCinemaIdAndShowDateAndTenantId(cinemaId, date, tenantId);
+    }
+
+    public List<Showtime> getShowtimes(UUID tenantId, Long cinemaId, Long movieId, LocalDate date) {
+        return showtimeRepository.findByCinemaIdAndMovieIdAndShowDateAndTenantId(cinemaId, movieId, date, tenantId);
+    }
+
+    public List<Movie> getNowShowingMovies(Long cinemaId) {
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        LocalDate today = LocalDate.now();
+        return showtimeRepository.findDistinctMoviesNowShowing(cinemaId, today, tenantId);
+    }
+
+    public List<Movie> getComingSoonMoviesSorted(Long cinemaId, UUID tenantId) {
+        LocalDate startDate = LocalDate.now().plusDays(1);
+        LocalDate endDate = startDate.plusDays(9);
+        return showtimeRepository.findComingSoonMoviesSorted(cinemaId, startDate, endDate, tenantId)
+                .stream()
+                .sorted(Comparator.comparing(ComingSoonMovieDTO::getShowDate))
+                .map(ComingSoonMovieDTO::getMovie)
+                .toList();
+    }
+
+    // Admin methods
+    public List<Showtime> getAllShowtimesForTenant(UUID tenantId) {
+        return showtimeRepository.findByTenantId(tenantId);
+    }
+
+    public Optional<Showtime> getShowtimeByIdAndTenant(Long id, UUID tenantId) {
+        return showtimeRepository.findByIdAndTenantId(id, tenantId);
+    }
+
+    public Showtime createShowtime(Long cinemaId, Long movieId, LocalDate showDate, LocalTime showTime, UUID tenantId) {
+        Cinema cinema = cinemaRepository.findById(cinemaId)
+                .orElseThrow(() -> new RuntimeException("Cinema not found"));
+
+        Movie movie = movieRepository.findById(movieId)
+                .orElseThrow(() -> new RuntimeException("Movie not found"));
+
+        Showtime showtime = new Showtime();
+        showtime.setCinema(cinema);
+        showtime.setMovie(movie);
+        showtime.setShowDate(showDate);
+        showtime.setShowTime(showTime);
+        showtime.setTenantId(tenantId);
+
+        return showtimeRepository.save(showtime);
+    }
+
+    public Optional<Showtime> updateShowtime(Long id, Long cinemaId, Long movieId, LocalDate showDate, LocalTime showTime, UUID tenantId) {
+        return showtimeRepository.findByIdAndTenantId(id, tenantId)
+                .map(showtime -> {
+                    Cinema cinema = cinemaRepository.findById(cinemaId)
+                            .orElseThrow(() -> new RuntimeException("Cinema not found"));
+
+                    Movie movie = movieRepository.findById(movieId)
+                            .orElseThrow(() -> new RuntimeException("Movie not found"));
+
+                    showtime.setCinema(cinema);
+                    showtime.setMovie(movie);
+                    showtime.setShowDate(showDate);
+                    showtime.setShowTime(showTime);
+
+                    return showtimeRepository.save(showtime);
+                });
+    }
+
+    public boolean deleteShowtime(Long id, UUID tenantId) {
+        return showtimeRepository.findByIdAndTenantId(id, tenantId)
+                .map(showtime -> {
+                    showtimeRepository.delete(showtime);
+                    return true;
+                })
+                .orElse(false);
+    }
+}
