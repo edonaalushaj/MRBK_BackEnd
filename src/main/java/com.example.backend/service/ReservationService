@@ -1,0 +1,122 @@
+package com.example.backend.service;
+
+import com.example.backend.dto.ReservationRequest;
+import com.example.backend.model.*;
+import com.example.backend.repository.*;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.*;
+
+@Service
+public class ReservationService {
+
+    private final ReservationRepository reservationRepository;
+    private final ReservationSeatRepository reservationSeatRepository;
+    private final SeatRepository seatRepository;
+    private final ShowtimeRepository showtimeRepository;
+    private final FoodRepository foodRepository;
+    private final PaymentTypeRepository paymentTypeRepository;
+    private final ReservationFoodRepository reservationFoodRepository; // ✅ shtuar
+
+    public ReservationService(
+            ReservationRepository reservationRepository,
+            ReservationSeatRepository reservationSeatRepository,
+            SeatRepository seatRepository,
+            ShowtimeRepository showtimeRepository,
+            FoodRepository foodRepository,
+            PaymentTypeRepository paymentTypeRepository,
+            ReservationFoodRepository reservationFoodRepository // ✅ shtuar
+    ) {
+        this.reservationRepository = reservationRepository;
+        this.reservationSeatRepository = reservationSeatRepository;
+        this.seatRepository = seatRepository;
+        this.showtimeRepository = showtimeRepository;
+        this.foodRepository = foodRepository;
+        this.paymentTypeRepository = paymentTypeRepository;
+        this.reservationFoodRepository = reservationFoodRepository;
+    }
+
+    @Transactional
+    public Reservation reserveSeats(AppUser user,
+                                    Long showtimeId,
+                                    List<UUID> seatIds,
+                                    List<ReservationRequest.FoodItemDTO> foodItems,
+                                    UUID paymentTypeId,
+                                    Double total) {
+
+        Showtime showtime = showtimeRepository.findById(showtimeId)
+                .orElseThrow(() -> new RuntimeException("Showtime not found"));
+
+        PaymentType paymentType = paymentTypeRepository.findById(paymentTypeId)
+                .orElseThrow(() -> new RuntimeException("Payment type not found"));
+
+        // Check seat availability
+        for (UUID seatId : seatIds) {
+            boolean isReserved = reservationSeatRepository.existsBySeatIdAndReservation_ShowtimeId(seatId, showtimeId);
+            if (isReserved) {
+                throw new RuntimeException("Seat with ID " + seatId + " is already reserved.");
+            }
+        }
+
+        // Create reservation
+        Reservation reservation = new Reservation();
+        reservation.setId(UUID.randomUUID());
+        reservation.setUser(user);
+        reservation.setUserEmail(user.getEmail());
+        reservation.setShowtime(showtime);
+        reservation.setReservationTime(LocalDateTime.now());
+        reservation.setTotal(total);
+        reservation.setPaymentType(paymentType);
+        reservation.setTenantId(user.getTenant().getId());
+
+        reservation = reservationRepository.save(reservation);
+
+        // Link seats
+        for (UUID seatId : seatIds) {
+            Seat seat = seatRepository.findById(seatId)
+                    .orElseThrow(() -> new RuntimeException("Seat not found: " + seatId));
+            ReservationSeat rs = new ReservationSeat(reservation, seat);
+            reservationSeatRepository.save(rs);
+        }
+
+        // Link food items
+        if (foodItems != null) {
+            for (ReservationRequest.FoodItemDTO item : foodItems) {
+                Food food = foodRepository.findById(item.getFoodId())
+                        .orElseThrow(() -> new RuntimeException("Food not found: " + item.getFoodId()));
+
+                ReservationFoodId id = new ReservationFoodId(reservation.getId(), food.getId());
+
+                ReservationFood rf = new ReservationFood();
+                rf.setId(id);
+                rf.setReservation(reservation);
+                rf.setFood(food);
+                rf.setTenantId(user.getTenant().getId());
+
+                reservationFoodRepository.save(rf);
+            }
+        }
+
+        return reservation;
+    }
+
+    public List<UUID> getReservedSeatIdsForShowtime(Long showtimeId) {
+        Showtime showtime = showtimeRepository.findById(showtimeId)
+                .orElseThrow(() -> new RuntimeException("Showtime not found"));
+
+        List<Reservation> reservations = reservationRepository.findByShowtime(showtime);
+        List<UUID> reservedSeatIds = new ArrayList<>();
+
+        for (Reservation reservation : reservations) {
+            if (reservation.getSeats() != null) {
+                for (ReservationSeat rs : reservation.getSeats()) {
+                    reservedSeatIds.add(rs.getSeat().getId());
+                }
+            }
+        }
+
+        return reservedSeatIds;
+    }
+}
