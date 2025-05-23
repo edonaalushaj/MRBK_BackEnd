@@ -1,0 +1,33 @@
+package com.example.backend.service;
+
+import com.example.backend.model.Cinema;
+import com.example.backend.repository.CinemaRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+@Service
+public class CinemaService {
+
+    @Autowired
+    private CinemaRepository cinemaRepository;
+
+    public List<Cinema> getAllCinemasForTenant(UUID tenantId) {
+        return cinemaRepository.findByTenantId(tenantId);
+    }
+
+    public Optional<Cinema> getCinemaByIdAndTenant(Long id, UUID tenantId) {
+        return cinemaRepository.findByIdAndTenantId(id, tenantId);
+    }
+
+    public Cinema saveCinema(Cinema cinema) {
+        return cinemaRepository.save(cinema);
+    }
+
+    public void deleteCinema(Long id) {
+        cinemaRepository.deleteById(id);
+    }
+}
