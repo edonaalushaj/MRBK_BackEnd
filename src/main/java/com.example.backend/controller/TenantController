@@ -1,0 +1,22 @@
+package com.example.backend.controller;
+
+import com.example.backend.model.Tenant;
+import com.example.backend.repository.TenantRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/public/tenants")
+@CrossOrigin(origins = "*")
+public class TenantController {
+
+    @Autowired
+    private TenantRepository tenantRepository;
+
+    @GetMapping
+    public List<Tenant> getAllTenants() {
+        return tenantRepository.findAll();
+    }
+}
