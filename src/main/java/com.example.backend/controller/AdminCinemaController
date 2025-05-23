@@ -1,0 +1,67 @@
+package com.example.backend.controller;
+
+import com.example.backend.model.Cinema;
+import com.example.backend.service.CinemaService;
+import com.example.backend.tenant.TenantContext;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/admin/cinemas")
+@RequiredArgsConstructor
+@PreAuthorize("hasRole('ADMIN')")
+@CrossOrigin(origins = "*")
+public class AdminCinemaController {
+
+    private final CinemaService cinemaService;
+
+    @GetMapping
+    public List<Cinema> getAllCinemas() {
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        return cinemaService.getAllCinemasForTenant(tenantId);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Cinema> getCinema(@PathVariable Long id) {
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        return cinemaService.getCinemaByIdAndTenant(id, tenantId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping
+    public ResponseEntity<Cinema> createCinema(@RequestBody Cinema cinema) {
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        cinema.setTenantId(tenantId);
+        Cinema savedCinema = cinemaService.saveCinema(cinema);
+        return ResponseEntity.ok(savedCinema);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Cinema> updateCinema(@PathVariable Long id, @RequestBody Cinema cinema) {
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        cinema.setId(id);
+        cinema.setTenantId(tenantId);
+
+        return cinemaService.getCinemaByIdAndTenant(id, tenantId)
+                .map(existingCinema -> ResponseEntity.ok(cinemaService.saveCinema(cinema)))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteCinema(@PathVariable Long id) {
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+
+        return cinemaService.getCinemaByIdAndTenant(id, tenantId)
+                .map(cinema -> {
+                    cinemaService.deleteCinema(id);
+                    return ResponseEntity.noContent().<Void>build();
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+}
