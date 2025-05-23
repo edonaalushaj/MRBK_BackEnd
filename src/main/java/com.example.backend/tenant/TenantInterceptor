@@ -1,0 +1,32 @@
+package com.example.backend.tenant;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.HandlerInterceptor;
+
+@Component
+public class TenantInterceptor implements HandlerInterceptor {
+
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        String tenantId = request.getHeader("X-Tenant-ID");
+
+        // For admin endpoints, tenant ID is required in header
+        if (request.getRequestURI().contains("/admin/") && tenantId != null && !tenantId.isEmpty()) {
+            TenantContext.setCurrentTenant(tenantId);
+        }
+        // For regular user endpoints, get tenant from JWT or other source
+        else if (!request.getRequestURI().contains("/admin/")) {
+            // Your existing tenant resolution logic for regular users
+            // This might come from JWT token or other authentication mechanism
+        }
+
+        return true;
+    }
+
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+        TenantContext.clear();
+    }
+}
