@@ -1,0 +1,46 @@
+package com.example.backend.repository;
+
+import com.example.backend.dto.ComingSoonMovieDTO;
+import com.example.backend.model.Movie;
+import com.example.backend.model.Showtime;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+public interface ShowtimeRepository extends JpaRepository<Showtime, Long> {
+
+    @Query("SELECT DISTINCT s.showDate FROM Showtime s WHERE s.cinema.id = :cinemaId AND s.tenantId = :tenantId ORDER BY s.showDate ASC")
+    List<LocalDate> findDatesByCinemaAndTenantId(@Param("cinemaId") Long cinemaId, @Param("tenantId") UUID tenantId);
+
+    @Query("SELECT DISTINCT s.movie FROM Showtime s WHERE s.cinema.id = :cinemaId AND s.showDate = :showDate AND s.tenantId = :tenantId")
+    List<Movie> findMoviesByCinemaIdAndShowDateAndTenantId(@Param("cinemaId") Long cinemaId, @Param("showDate") LocalDate showDate, @Param("tenantId") UUID tenantId);
+
+    List<Showtime> findByCinemaIdAndMovieIdAndShowDateAndTenantId(Long cinemaId, Long movieId, LocalDate showDate, UUID tenantId);
+
+    @Query("SELECT DISTINCT s.movie FROM Showtime s WHERE s.cinema.id = :cinemaId AND s.showDate = :today AND s.tenantId = :tenantId")
+    List<Movie> findDistinctMoviesNowShowing(@Param("cinemaId") Long cinemaId, @Param("today") LocalDate today, @Param("tenantId") UUID tenantId);
+    @Query("""
+SELECT new com.example.backend.dto.ComingSoonMovieDTO(s.movie, MIN(s.showDate))
+FROM Showtime s
+WHERE s.cinema.id = :cinemaId AND s.showDate BETWEEN :startDate AND :endDate AND s.tenantId = :tenantId
+GROUP BY s.movie
+ORDER BY MIN(s.showDate)
+""")
+
+    List<ComingSoonMovieDTO> findComingSoonMoviesSorted(
+            @Param("cinemaId") Long cinemaId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            @Param("tenantId") UUID tenantId
+    );
+    Optional<Showtime> findFirstByMovieIdOrderByShowDateAsc(Long movieId);
+
+
+
+
+}
